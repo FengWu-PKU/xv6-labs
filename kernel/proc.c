@@ -26,6 +26,7 @@ extern char trampoline[]; // trampoline.S
 // must be acquired before any p->lock.
 struct spinlock wait_lock;
 
+
 // Allocate a page for each process's kernel stack.
 // Map it high in memory, followed by an invalid
 // guard page.
@@ -298,6 +299,10 @@ fork(void)
 
   // copy saved user registers.
   *(np->trapframe) = *(p->trapframe);
+
+  // mycode here
+  // copy trace mask from parent to child.
+  np->trace_mask=p->trace_mask;
 
   // Cause fork to return 0 in the child.
   np->trapframe->a0 = 0;
