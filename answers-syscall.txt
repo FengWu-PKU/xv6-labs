@@ -1,0 +1,6 @@
+1. usertrap()
+2. 7, SYS_exec
+3. user mode
+4. lw	a3,0(zero);  a3
+5. 尝试从地址0读取，地址0不是内核状态
+6. initcode, pid=1
