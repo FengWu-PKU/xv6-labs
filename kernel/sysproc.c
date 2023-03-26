@@ -93,3 +93,26 @@ sys_uptime(void)
   release(&tickslock);
   return xticks;
 }
+
+uint64
+sys_sigalarm(void)
+{
+    int ticks;
+    argint(0, &ticks);
+    uint64 handler;
+    argaddr(1, &handler);
+    myproc()->ticks=ticks;
+    myproc()->handler=handler;
+    return 0;
+}
+
+extern char alarmTrapframe[];
+uint64
+sys_sigreturn(void)
+{
+    memmove(myproc()->trapframe, alarmTrapframe,TRAPFRAMESIZE);  //恢复trapframe
+    myproc()->passedTicks=0; // 重置
+    return myproc()->trapframe->a0;  // 保证a0还是原来的a0
+}
+
+

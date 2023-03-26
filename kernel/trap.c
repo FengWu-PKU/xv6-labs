@@ -11,6 +11,9 @@ uint ticks;
 
 extern char trampoline[], uservec[], userret[];
 
+
+char alarmTrapframe[TRAPFRAMESIZE];
+
 // in kernelvec.S, calls kerneltrap().
 void kernelvec();
 
@@ -77,9 +80,18 @@ usertrap(void)
     exit(-1);
 
   // give up the CPU if this is a timer interrupt.
-  if(which_dev == 2)
-    yield();
-
+  if(which_dev == 2) {
+      if(p->ticks==0) { // only invoke the alarm function if the process has a timer outstanding
+          yield();
+      }else {
+          p->passedTicks+=1;
+          if(p->passedTicks==p->ticks) {
+                memmove(alarmTrapframe, p->trapframe, TRAPFRAMESIZE);
+                p->trapframe->epc=p->handler;
+          }
+          yield();
+      }
+  }
   usertrapret();
 }
 
