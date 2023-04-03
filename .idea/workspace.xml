@@ -25,9 +25,7 @@
     </configurations>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="efc777c5-ed3a-418c-a30a-902a35edf5d3" name="Changes" comment="&quot;backtrace compelted&quot;">
-      <change afterPath="$PROJECT_DIR$/time.txt" afterDir="false" />
-    </list>
+    <list default="true" id="efc777c5-ed3a-418c-a30a-902a35edf5d3" name="Changes" comment="&quot;backtrace compelted&quot;" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
