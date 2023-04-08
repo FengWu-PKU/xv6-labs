@@ -17,6 +17,16 @@ struct entry *table[NBUCKET];
 int keys[NKEYS];
 int nthread = 1;
 
+// a lock per bucket
+pthread_mutex_t locks[NBUCKET];
+
+void
+initLocks()
+{
+    for(int i=0;i<NBUCKET;i++) {
+        pthread_mutex_init(&locks[i], NULL);
+    }
+}
 
 double
 now()
@@ -52,7 +62,9 @@ void put(int key, int value)
     e->value = value;
   } else {
     // the new is new.
+    pthread_mutex_lock(&locks[i]);
     insert(key, value, &table[i], table[i]);
+    pthread_mutex_unlock(&locks[i]);
   }
 
 }
@@ -118,6 +130,7 @@ main(int argc, char *argv[])
     keys[i] = random();
   }
 
+  initLocks();
   //
   // first the puts
   //

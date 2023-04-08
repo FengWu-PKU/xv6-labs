@@ -31,7 +31,7 @@ struct context {
 struct thread {
   char       stack[STACK_SIZE]; /* the thread's stack */
   int        state;             /* FREE, RUNNING, RUNNABLE */
-  struct context context;
+  struct context context;  // 这样用是把数据放在堆上，指针放在栈上；如果用指针，则只会在栈上分配一个8位的指针，所以不能用指针
 };
 struct thread all_thread[MAX_THREAD];
 struct thread *current_thread;
