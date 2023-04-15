@@ -465,7 +465,7 @@ copyinstr(pagetable_t pagetable, char *dst, uint64 srcva, uint64 max)
 int
 uncopied_cow(pagetable_t pgtbl, uint64 va){
 
-    if(va >= MAXVA)
+    if(va >= MAXVA||va<PGSIZE)
         return -1;
     pte_t* pte = walk(pgtbl, va, 0);
     if(pte == 0)             // 如果这个页不存在
