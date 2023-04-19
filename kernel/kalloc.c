@@ -74,7 +74,7 @@ freerange(void *pa_start, void *pa_end)
         *(kmem.paref+N(p)) = 1;  //初始化为1，因为后面有kfree减1
         release(&kmem.reflock);
 
-        kfree(p);
+        kfree(p);  // 这里有减1
     }
 }
 //pa为物理内存地址
