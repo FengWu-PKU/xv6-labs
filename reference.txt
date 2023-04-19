@@ -1,0 +1,20 @@
+https://zhuanlan.zhihu.com/p/334648647
+
+* backtrace
+    * 任务：输出调用函数序列的返回地址
+    * kernel/printf.c:137  void backtrace(void)
+    * kernel/sysproc.c:71
+    * 重点：stack frame只有一页；使用PGROUNDUP(fp)作为循环上溯的边界；
+            fp-8是返回地址, fp-16是调用者的fp
+* alarm
+    * 任务：实现系统调用sigalarm(n, fn)，调用sigalarm的用户进程，每在cpu上运行n ticks就会调用fn，fn返回到原用户进程继续执行
+    * user/user.h:42, 43  声明sigalarlm, sigreturn
+    * user/usys.pl39, 40  增加用户态到内核态的接口
+    * kernel/syscall.h:23, 24  分配系统调用号
+    * kernel/syscall.c:131, 132  mapping系统调用号和相应的函数
+    * kernel/proc.h:108~110 进程结构体内添加必要的字段
+    * kernel/proc.c:149 初始化passedTicks=0
+    * kernel/trap.c:15  声明alarmtrapframe用来保存当前进程的trapframe，并在sigreturn中恢复
+                    83~94 处理时钟中断  90通过epc寄存器设置从内核态转到用户态时代码继续执行的位置，即handler函数
+    * kernel/sysproc.c:98~116 sigalarm和sigreturn的实现，前者主要设置ticks和handler，后者主要恢复用户进程的trapframe
+
