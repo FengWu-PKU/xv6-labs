@@ -7,3 +7,7 @@
     * kernel/proc.c:135~140 初始化proc的usyscall
     * kernel/proc.c:221~227 在页表中加入usyscall的映射
     * kernel/proc.c:171~173, 240 进程回收时释放页面，消除页表项
+* vmprint
+    * 功能：打印页表信息
+    * kernel/vm.c vmprint, vmprintHelper
+    * kernel/exec.c exec()调用vmprint
