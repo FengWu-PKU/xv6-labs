@@ -5,5 +5,5 @@
     * USYSCALL在进程地址空间trapframe的正下方的一页
     * kernel/proc.h:108 添加到proc结构体中
     * kernel/proc.c:135~140 初始化proc的usyscall
-    * kernel/proc.c:212~219 在页表中加入usyscall的映射
-    * kernel/proc.c:172~173, 237 进程回收时释放页面，消除页表项
+    * kernel/proc.c:221~227 在页表中加入usyscall的映射
+    * kernel/proc.c:171~173, 240 进程回收时释放页面，消除页表项
