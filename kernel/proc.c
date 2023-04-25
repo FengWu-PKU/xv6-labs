@@ -708,3 +708,19 @@ procdump(void)
     printf("\n");
   }
 }
+
+int
+pgaccess(void *va, int num, void *bitmask)
+{
+    struct proc *p=myproc();
+    uint64 tmp=0;
+    for(int i=0;i<num;i++) {
+        pte_t *pte;
+        pte=walk(p->pagetable, (uint64)va+PGSIZE*i, 0);
+        if(pte!=0&&(*pte)&PTE_A) {
+            tmp|=1<<i;
+            *pte&=~PTE_A;  // clear PTE_A. Otherwise, it won't be possible to determine if the page was accessed since the last time pgaccess() was called
+        }
+    }
+    return copyout(p->pagetable, (uint64)bitmask, (char *)&tmp, sizeof(uint64));
+}

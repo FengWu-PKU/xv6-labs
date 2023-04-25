@@ -11,3 +11,8 @@
     * 功能：打印页表信息
     * kernel/vm.c vmprint, vmprintHelper
     * kernel/exec.c exec()调用vmprint
+* pgaccess
+    * 功能：确定哪些页被访问过
+    * kernel/riscv.h:346  PTE_A=1<<6
+    * kernel/sysproc.c:104~114 sys_pgaccess()
+    * kernel/proc.c:

@@ -1,0 +1,4 @@
+getpid(), 内核和用户态共享一个页面可以直接获得pid，就减去了进行状态切换和上下文切换的开销。
+
+page0是text和data, page2是栈， page1是保护页不能访问， 剩下的一次是usyscall, trapframe, trampoline
+
