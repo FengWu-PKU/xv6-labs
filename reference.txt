@@ -6,3 +6,10 @@ https://zhuanlan.zhihu.com/p/426507542
            为每个cpu维护一个表和锁可以实现不同cpu上的alloc, free可以并行
     * kernel/kalloc.c: kmem_CPU[NCPU], 在kalloc中初始化每个锁， kfree中根据cpuid()获得当前的cpu id，并使用push/pop_off避免死锁
                        kalloc()中先在本身的空闲块中找，找不到就去其他cpu steal
+* Buffer cache
+    * 减少读cache的竞争
+    * kernel/buf.h: 去掉prev， 增加time
+    * kernel/bio.c: 修改bcache为hash表结构
+                    binit()中初始化将所有块放在第一个bucket中
+                    brelease()中使用hash， bpin()/bunpin()分别对应将一个块的引用计数增减1
+                    修改bget()，现在自身hash到的bucket中找，找不到就去别的bucket中找
