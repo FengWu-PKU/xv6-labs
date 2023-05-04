@@ -80,74 +80,94 @@ write_cache(struct buf *take_buf, uint dev, uint blockno)
 static struct buf*
 bget(uint dev, uint blockno)
 {
-  struct buf *b, *last;  // last记录hash表的一个bucket中最后一个节点，便于插入新节点
-  struct buf *take_buf=0;  // 记录空闲块
-  int bucket=hash(blockno);
+    struct buf *b, *last;
+    struct buf *take_buf = 0;
+    int id = hash(blockno);
+    acquire(&(bcache.lock[id]));
 
-  acquire(&bcache.lock[bucket]);
+    // 在本池子中寻找是否已缓存，同时寻找空闲块，并记录链表最后一个节点便于待会插入新节点使用
+    // Is the block already cached?
+    for(b = bcache.head[id].next, last = &(bcache.head[id]); b; b = b->next, last = last->next)
+    {
 
-  // Is the block already cached?
-  for(b = bcache.head[bucket].next, last=&(bcache.head[bucket]); b; b = b->next, last=last->next){
-    if(b->dev == dev && b->blockno == blockno){ // 找到了
-      b->refcnt++;
-      b->time=ticks;
-      release(&bcache.lock[bucket]);
-      acquiresleep(&b->lock);
-      return b;
+        if(b->dev == dev && b->blockno == blockno)
+        {
+            b->time = ticks;
+            b->refcnt++;
+            release(&(bcache.lock[id]));
+            acquiresleep(&b->lock);
+            return b;
+        }
+        if(b->refcnt == 0)
+        {
+            take_buf = b;
+        }
     }
-    if(b->refcnt==0) { // 有空闲块，就拿它了
-        take_buf=b;
+
+    //如果没缓存并且在本池子有空闲块，则使用它
+    if(take_buf)
+    {
+        write_cache(take_buf, dev, blockno);
+        release(&(bcache.lock[id]));
+        acquiresleep(&(take_buf->lock));
+        return take_buf;
     }
-  }
 
-  if(take_buf) {  // 有空闲块,使用它
-      write_cache(take_buf, dev, blockno);
-      release(&bcache.lock[bucket]);
-      acquiresleep(&(take_buf->lock));
-      return take_buf;
-  }
 
-  // 到其他bucket中寻找最久未使用的空闲块
-  int lock_num=-1;  //
-  uint time=__UINT32_MAX__;  // 最小的最后一次使用的时间
-  struct buf *tmp;
-  struct buf *take_buf_prev=0;  // 最后选定的块 的前一个块
-  for(int i=0; i<NBUCKET;i++) {
-      if(i==bucket) continue;
-      acquire(&bcache.lock[i]);  // 获取bucket的锁
-      for(b=bcache.head[bucket].next, tmp=&(bcache.head[i]);b;b=b->next, tmp=tmp->next) {
-          if(b->refcnt==0) {  // 空闲块
-              if(b->time<time) {
-                  time = b->time;
-                  take_buf_prev = tmp;
-                  take_buf = b;
 
-                  // 如果上一个记录的空闲块不在这个bucket中，释放锁
-                  if (lock_num != -1 && lock_num != i && holding(&(bcache.lock[lock_num])))
-                      release(&bcache.lock[lock_num]);
-                  lock_num = i;
-              }
-          }
-      }
-      // 没有用到这个bucket中的块，则释放锁
-      if(lock_num!=i)
-          release(&bcache.lock[i]);
-  }
-  if(!take_buf) {
-      panic("bget: no buffers");
-  }
+    // 到其他池子寻找最久未使用的空闲块
+    int lock_num = -1;
 
-  // 将选中的块从本来的bucket中steal出来
-  take_buf_prev->next=take_buf->next;
-  take_buf->next=0;
-  release(&bcache.lock[lock_num]);
-  last->next=take_buf;
-  write_cache(take_buf, dev, blockno);
+    uint time = __UINT32_MAX__;
+    struct buf *tmp;
+    struct buf *last_take = 0;
+    for(int i = 0; i < NBUCKET; ++i)
+    {
 
-  release(&bcache.lock[bucket]);
-  acquiresleep(&(take_buf->lock));
+        if(i == id) continue;
+        //获取寻找池子的锁
+        acquire(&(bcache.lock[i]));
 
-  return take_buf;
+        for(b = bcache.head[i].next, tmp = &(bcache.head[i]); b; b = b->next,tmp = tmp->next)
+        {
+            if(b->refcnt == 0)
+            {
+                //找到符合要求的块
+                if(b->time < time)
+                {
+
+                    time = b->time;
+                    last_take = tmp;
+                    take_buf = b;
+                    //如果上一个空闲块不在本轮池子中，则释放那个空闲块的锁
+                    if(lock_num != -1 && lock_num != i && holding(&(bcache.lock[lock_num])))
+                        release(&(bcache.lock[lock_num]));
+                    lock_num = i;
+                }
+            }
+        }
+        //没有用到本轮池子的块，则释放锁
+        if(lock_num != i)
+            release(&(bcache.lock[i]));
+    }
+
+    if (!take_buf)
+        panic("bget: no buffers");
+
+    //将选中块从其他池子中拿出
+    last_take->next = take_buf->next;
+    take_buf->next = 0;
+    release(&(bcache.lock[lock_num]));
+    //将选中块放入本池子中，并写cache
+    b = last;
+    b->next = take_buf;
+    write_cache(take_buf, dev, blockno);
+
+
+    release(&(bcache.lock[id]));
+    acquiresleep(&(take_buf->lock));
+
+    return take_buf;
 }
 
 // Return a locked buf with the contents of the indicated block.
