@@ -1,0 +1,8 @@
+https://pdos.csail.mit.edu/6.1810/2022/labs/lock.html
+https://zhuanlan.zhihu.com/p/426507542
+
+* Mem allocator
+    * 功能：在多个cpu的情况下，原本使用一个空闲链表和一个锁会无法实现alloc和free的并行
+           为每个cpu维护一个表和锁可以实现不同cpu上的alloc, free可以并行
+    * kernel/kalloc.c: kmem_CPU[NCPU], 在kalloc中初始化每个锁， kfree中根据cpuid()获得当前的cpu id，并使用push/pop_off避免死锁
+                       kalloc()中先在本身的空闲块中找，找不到就去其他cpu steal
