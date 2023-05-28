@@ -4,7 +4,7 @@ https://zhuanlan.zhihu.com/p/334648647
     * 任务：输出调用函数序列的返回地址
     * kernel/printf.c:137  void backtrace(void)
     * kernel/sysproc.c:71
-    * 重点：stack frame只有一页；使用PGROUNDUP(fp)作为循环上溯的边界；
+    * 重点：每个内核栈的空间是对齐的一页，栈是为进程分配的，stack frame是为函数分配的，一个内核栈可以有多个stack frame；使用PGROUNDUP(fp)作为循环上溯的边界；
             fp-8是返回地址, fp-16是调用者的fp
 * alarm
     * 任务：实现系统调用sigalarm(n, fn)，调用sigalarm的用户进程，每在cpu上运行n ticks就会调用fn，fn返回到原用户进程继续执行
